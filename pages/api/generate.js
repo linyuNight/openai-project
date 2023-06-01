@@ -1,6 +1,8 @@
 import { Configuration, OpenAIApi } from "openai";
+import axios from 'axios'
 
 const configuration = new Configuration({
+  organization: "org-P0yMVVQrfhFyViGirXhf6sT6",
   apiKey: process.env.OPENAI_API_KEY,
 });
 const openai = new OpenAIApi(configuration);
@@ -26,12 +28,27 @@ export default async function (req, res) {
   }
 
   try {
-    const completion = await openai.createCompletion({
-      model: "text-davinci-003",
-      prompt: generatePrompt(animal),
-      temperature: 0.6,
-    });
-    res.status(200).json({ result: completion.data.choices[0].text });
+    // const completion = await openai.createCompletion({
+    //   model: "text-davinci-003",
+    //   prompt: animal,
+    //   temperature: 0.6,
+    // });
+
+    // res.status(200).json({ result: completion.data.choices[0].text });
+    // res.status(200).json({ result: completion.data.choices[0].text });
+
+    axios.post('https://api.openai.com/v1/chat/completions', 
+    {
+      "model": "gpt-3.5-turbo",
+      "messages": [{"role": "user", "content": animal}]
+    },{
+      headers: {
+        'Content-Type': "application/json",
+        'Authorization': `Bearer ${configuration.apiKey}`
+      }
+    }).then(result => {
+      res.status(200).json({ result: result.data.choices[0].message.content });
+    })
   } catch(error) {
     // Consider adjusting the error handling logic for your use case
     if (error.response) {
@@ -48,15 +65,15 @@ export default async function (req, res) {
   }
 }
 
-function generatePrompt(animal) {
-  const capitalizedAnimal =
-    animal[0].toUpperCase() + animal.slice(1).toLowerCase();
-  return `Suggest three names for an animal that is a superhero.
+// function generatePrompt(animal) {
+//   const capitalizedAnimal =
+//     animal[0].toUpperCase() + animal.slice(1).toLowerCase();
+//   return `Suggest three names for an animal that is a superhero.
 
-Animal: Cat
-Names: Captain Sharpclaw, Agent Fluffball, The Incredible Feline
-Animal: Dog
-Names: Ruff the Protector, Wonder Canine, Sir Barks-a-Lot
-Animal: ${capitalizedAnimal}
-Names:`;
-}
+// Animal: Cat
+// Names: Captain Sharpclaw, Agent Fluffball, The Incredible Feline
+// Animal: Dog
+// Names: Ruff the Protector, Wonder Canine, Sir Barks-a-Lot
+// Animal: ${capitalizedAnimal}
+// Names:`;
+// }
